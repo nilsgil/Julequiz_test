@@ -1,0 +1,598 @@
+<!DOCTYPE html>
+<html lang="nb">
+<head>
+  <meta charset="UTF-8" />
+  <title>Julequiz – kategori for kategori</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <style>
+    :root {
+      font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+      background: #020617;
+      color: #f9fafb;
+    }
+
+    body {
+      margin: 0;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      min-height: 100vh;
+      box-sizing: border-box;
+      gap: 0.75rem;
+    }
+
+    h1 {
+      text-align: center;
+      margin: 0.25rem 0;
+      font-size: 1.6rem;
+    }
+
+    .subtitle {
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.8;
+      margin-bottom: 0.5rem;
+    }
+
+    .top-bar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      flex-wrap: wrap;
+    }
+
+    .score {
+      font-size: 0.95rem;
+      padding: 0.35rem 0.8rem;
+      background: #020617;
+      border-radius: 999px;
+      border: 1px solid #1f2937;
+    }
+
+    .btn {
+      border: none;
+      border-radius: 999px;
+      padding: 0.4rem 0.8rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+      background: #2563eb;
+      color: #f9fafb;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.25rem;
+      white-space: nowrap;
+    }
+
+    .btn-secondary {
+      background: #374151;
+    }
+
+    .btn:active {
+      transform: scale(0.97);
+    }
+
+    .categories {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+    }
+
+    .category-card {
+      background: #020617;
+      border-radius: 12px;
+      border: 1px solid #1f2937;
+      padding: 0.75rem;
+      box-shadow: 0 10px 25px rgba(0,0,0,0.4);
+    }
+
+    .category-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .category-title {
+      font-weight: 600;
+      font-size: 1rem;
+    }
+
+    .category-status {
+      font-size: 0.8rem;
+      opacity: 0.8;
+    }
+
+    .values-row {
+      display: flex;
+      gap: 0.4rem;
+      flex-wrap: wrap;
+    }
+
+    .value-btn {
+      flex: 1 0 22%;
+      min-width: 70px;
+      text-align: center;
+      border-radius: 999px;
+      padding: 0.4rem 0.3rem;
+      border: 1px solid #1f2937;
+      background: #111827;
+      color: #facc15;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .value-btn.used {
+      background: #020617;
+      color: #4b5563;
+      text-decoration: line-through;
+      cursor: default;
+    }
+
+    .value-btn.category-done {
+      background: #020617;
+      color: #6b7280;
+      cursor: default;
+    }
+
+    .value-btn:active:not(.used):not(.category-done) {
+      transform: scale(0.96);
+    }
+
+    .footer {
+      text-align: center;
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 0.5rem;
+    }
+
+    /* Modal */
+    .modal-backdrop {
+      position: fixed;
+      inset: 0;
+      background: rgba(15,23,42,0.86);
+      display: none;
+      justify-content: center;
+      align-items: center;
+      z-index: 10;
+      padding: 1rem;
+      box-sizing: border-box;
+    }
+
+    .modal {
+      background: #020617;
+      border-radius: 12px;
+      padding: 1rem;
+      max-width: 480px;
+      width: 100%;
+      border: 1px solid #1f2937;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.6);
+    }
+
+    .modal h2 {
+      margin: 0 0 0.25rem;
+      font-size: 1.1rem;
+    }
+
+    .modal-meta {
+      font-size: 0.8rem;
+      opacity: 0.8;
+      margin-bottom: 0.5rem;
+    }
+
+    .modal-question {
+      margin: 0.25rem 0 0.6rem;
+      font-size: 0.95rem;
+    }
+
+    .choices {
+      display: flex;
+      flex-direction: column;
+      gap: 0.4rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .choice-btn {
+      width: 100%;
+      text-align: left;
+      border-radius: 999px;
+      border: 1px solid #4b5563;
+      background: #020617;
+      color: #f9fafb;
+      padding: 0.45rem 0.75rem;
+      font-size: 0.9rem;
+      cursor: pointer;
+    }
+
+    .choice-btn:active {
+      transform: scale(0.98);
+    }
+
+    .result-text {
+      font-size: 0.9rem;
+      min-height: 1.1em;
+    }
+
+    .correct {
+      color: #22c55e;
+    }
+
+    .wrong {
+      color: #f97316;
+    }
+
+    .modal-buttons {
+      display: flex;
+      justify-content: flex-end;
+      gap: 0.5rem;
+      margin-top: 0.4rem;
+      flex-wrap: wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>Julequiz</h1>
+  <div class="subtitle">Velg én verdi per kategori, klikk på svaralternativ og se hvor mange poeng du får 🎄</div>
+
+  <div class="top-bar">
+    <div class="score">Poeng: <span id="score">0</span></div>
+    <div style="display:flex;gap:0.4rem;flex-wrap:wrap;">
+      <button class="btn-secondary btn" id="resetBtn">Nullstill</button>
+      <button class="btn btn" id="helpBtn">❔ Regler</button>
+    </div>
+  </div>
+
+  <div class="categories" id="categories"></div>
+
+  <div class="footer">
+    Du kan kun velge <strong>én verdi per kategori</strong>. Når den er brukt, låses resten.
+  </div>
+
+  <!-- Modal -->
+  <div class="modal-backdrop" id="modalBackdrop">
+    <div class="modal">
+      <h2 id="modalCategory">Kategori</h2>
+      <div class="modal-meta">
+        Verdi: <span id="modalValue"></span> poeng
+      </div>
+      <div class="modal-question" id="modalQuestion"></div>
+      <div class="choices" id="choices"></div>
+      <div class="result-text" id="resultText"></div>
+      <div class="modal-buttons">
+        <button class="btn-secondary btn" id="closeBtn">Lukk</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    // KONFIGURASJON: kategorier, spørsmål, svaralternativer
+    const data = [
+      {
+        category: "Julefilmer",
+        questions: [
+          {
+            value: 100,
+            question: "I hvilken film sier Kevin: «Keep the change, ya filthy animal»?",
+            answer: "hjemme alene",
+            choices: ["Hjemme Alene", "Love Actually", "Jul i Flåklypa", "The Holiday"]
+          },
+          {
+            value: 200,
+            question: "Hvilken julefilm handler om en gutt som reiser med et magisk tog til Nordpolen?",
+            answer: "polarekspressen",
+            choices: ["Polarekspressen", "Hjemme Alene 2", "Grinchen", "The Santa Clause"]
+          },
+          {
+            value: 300,
+            question: "I hvilken film møter vi Buddy, som tror han er en alv?",
+            answer: "elf",
+            choices: ["Elf", "The Santa Clause", "Klaus", "Bad Santa"]
+          },
+          {
+            value: 400,
+            question: "I hvilken film er «Grinch» hovedfiguren som hater julen?",
+            answer: "how the grinch stole christmas",
+            choices: ["How the Grinch Stole Christmas", "Krampus", "Love Actually", "The Nightmare Before Christmas"]
+          }
+        ]
+      },
+      {
+        category: "Julemat",
+        questions: [
+          {
+            value: 100,
+            question: "Hva heter den tradisjonelle riskremen med mandel i?",
+            answer: "riskrem",
+            choices: ["Riskrem", "Risgrøt", "Pudding", "Fromasj"]
+          },
+          {
+            value: 200,
+            question: "Hva slags kjøtt er vanlig julemiddag på Østlandet (tradisjonelt)?",
+            answer: "ribbe",
+            choices: ["Ribbe", "Pinnekjøtt", "Lutefisk", "Kalkun"]
+          },
+          {
+            value: 300,
+            question: "Hva kalles den varme drikken med rødvin, krydder og ofte mandler og rosiner?",
+            answer: "gløgg",
+            choices: ["Gløgg", "Punsj", "Toddy", "Mulled beer"]
+          },
+          {
+            value: 400,
+            question: "Hva slags fisk brukes ofte til lutefisk?",
+            answer: "torsk",
+            choices: ["Torsk", "Laks", "Sei", "Makrell"]
+          }
+        ]
+      },
+      {
+        category: "Julesanger",
+        questions: [
+          {
+            value: 100,
+            question: "Fullfør: «På låven sitter nissen med sin ...»",
+            answer: "julegrøt",
+            choices: ["julegrøt", "risengrynsgrøt", "brune saus", "pepperkake"]
+          },
+          {
+            value: 200,
+            question: "Hvilken julesang starter med «Glade jul, hellige jul»?",
+            answer: "deilig er jorden",
+            choices: ["Deilig er jorden", "Glade jul", "O helga natt", "Julekveldsvisa"]
+          },
+          {
+            value: 300,
+            question: "Hva heter sangen om en julenisse som heter Kalle i USA?",
+            answer: "frosty the snowman",
+            choices: ["Frosty the Snowman", "Rudolph the Red-Nosed Reindeer", "Jingle Bells", "Santa Claus is Coming to Town"]
+          },
+          {
+            value: 400,
+            question: "Hvilken sang: «Jingle bell, jingle bell, jingle bell rock...»?",
+            answer: "jingle bell rock",
+            choices: ["Jingle Bell Rock", "Jingle Bells", "Rockin' Around the Christmas Tree", "Last Christmas"]
+          }
+        ]
+      },
+      {
+        category: "Tradisjoner",
+        questions: [
+          {
+            value: 100,
+            question: "Hvilken ukedag er julaften alltid på?",
+            answer: "ingen",
+            choices: ["Ingen fast", "Søndag", "Lørdag", "Fredag"]
+          },
+          {
+            value: 200,
+            question: "Hva er datoen for julaften?",
+            answer: "24. desember",
+            choices: ["24. desember", "25. desember", "23. desember", "31. desember"]
+          },
+          {
+            value: 300,
+            question: "Hva heter dagen etter julaften?",
+            answer: "første juledag",
+            choices: ["Første juledag", "Andre juledag", "Nyttårsaften", "Adventssøndag"]
+          },
+          {
+            value: 400,
+            question: "Hva kalles tiden fra 1. søndag i advent til julaften?",
+            answer: "advent",
+            choices: ["Advent", "Fasten", "Romjul", "Epifani"]
+          }
+        ]
+      },
+      {
+        category: "Litt vanskelig",
+        questions: [
+          {
+            value: 100,
+            question: "Hva heter landet der Santa Claus Town ligger?",
+            answer: "usa",
+            choices: ["USA", "Canada", "Finland", "Tyskland"]
+          },
+          {
+            value: 200,
+            question: "Hva heter reinsdyret med rød nese?",
+            answer: "rudolf",
+            choices: ["Rudolf", "Blitzen", "Dasher", "Vixen"]
+          },
+          {
+            value: 300,
+            question: "I hvilket land er julenissen kjent som «Sinterklaas»?",
+            answer: "nederland",
+            choices: ["Nederland", "Tyskland", "Belgia", "Frankrike"]
+          },
+          {
+            value: 400,
+            question: "Hvilket engelsk ord brukes om juletrepyntede kjeks-/hus som lages av krydret deig?",
+            answer: "gingerbread",
+            choices: ["Gingerbread", "Shortbread", "Sugar cookie", "Biscuit"]
+          }
+        ]
+      }
+    ];
+
+    function normalize(str) {
+      return str
+        .toString()
+        .trim()
+        .toLowerCase()
+        .replace(/å/g, "aa")
+        .replace(/ø/g, "oe")
+        .replace(/æ/g, "ae");
+    }
+
+    let score = 0;
+    let usedQuestions = {};      // "cIndex-qIndex" -> true
+    let usedCategory = {};       // "cIndex" -> true (når én er valgt)
+
+    const categoriesEl = document.getElementById("categories");
+    const scoreEl = document.getElementById("score");
+    const resetBtn = document.getElementById("resetBtn");
+    const helpBtn = document.getElementById("helpBtn");
+
+    const modalBackdrop = document.getElementById("modalBackdrop");
+    const modalCategory = document.getElementById("modalCategory");
+    const modalValue = document.getElementById("modalValue");
+    const modalQuestion = document.getElementById("modalQuestion");
+    const choicesEl = document.getElementById("choices");
+    const resultText = document.getElementById("resultText");
+    const closeBtn = document.getElementById("closeBtn");
+
+    let current = null;
+
+    function renderCategories() {
+      categoriesEl.innerHTML = "";
+
+      data.forEach((cat, cIndex) => {
+        const card = document.createElement("div");
+        card.className = "category-card";
+
+        const header = document.createElement("div");
+        header.className = "category-header";
+
+        const title = document.createElement("div");
+        title.className = "category-title";
+        title.textContent = cat.category;
+
+        const status = document.createElement("div");
+        status.className = "category-status";
+        status.textContent = usedCategory[cIndex]
+          ? "Kategori brukt ✅"
+          : "Velg én verdi";
+
+        header.appendChild(title);
+        header.appendChild(status);
+
+        const valuesRow = document.createElement("div");
+        valuesRow.className = "values-row";
+
+        cat.questions.forEach((q, qIndex) => {
+          const btn = document.createElement("button");
+          btn.className = "value-btn";
+          btn.textContent = q.value;
+
+          const key = `${cIndex}-${qIndex}`;
+
+          if (usedQuestions[key]) {
+            btn.classList.add("used");
+            btn.disabled = true;
+          } else if (usedCategory[cIndex]) {
+            // Kategori allerede tatt -> alle andre disabled
+            btn.classList.add("category-done");
+            btn.disabled = true;
+          } else {
+            btn.addEventListener("click", () => openQuestion(cIndex, qIndex));
+          }
+
+          valuesRow.appendChild(btn);
+        });
+
+        card.appendChild(header);
+        card.appendChild(valuesRow);
+        categoriesEl.appendChild(card);
+      });
+    }
+
+    function openQuestion(cIndex, qIndex) {
+      const q = data[cIndex].questions[qIndex];
+      const key = `${cIndex}-${qIndex}`;
+      if (usedQuestions[key] || usedCategory[cIndex]) return;
+
+      current = { cIndex, qIndex, key, question: q };
+
+      modalCategory.textContent = data[cIndex].category;
+      modalValue.textContent = q.value;
+      modalQuestion.textContent = q.question;
+      resultText.textContent = "";
+      resultText.className = "result-text";
+
+      choicesEl.innerHTML = "";
+      q.choices.forEach(choice => {
+        const btn = document.createElement("button");
+        btn.className = "choice-btn";
+        btn.textContent = choice;
+        btn.addEventListener("click", () => handleChoice(choice));
+        choicesEl.appendChild(btn);
+      });
+
+      modalBackdrop.style.display = "flex";
+    }
+
+    function handleChoice(choiceText) {
+      if (!current) return;
+      const user = normalize(choiceText);
+      const correct = normalize(current.question.answer);
+
+      const isCorrect = user === correct;
+
+      if (isCorrect) {
+        score += current.question.value;
+        resultText.textContent = `Riktig! +${current.question.value} poeng 🎉`;
+        resultText.className = "result-text correct";
+      } else {
+        score -= current.question.value;
+        resultText.textContent = `Feil. Riktig svar var: "${current.question.answer}". -${current.question.value} poeng.`;
+        resultText.className = "result-text wrong";
+      }
+      scoreEl.textContent = score;
+
+      usedQuestions[current.key] = true;
+      usedCategory[current.cIndex] = true; // låser hele kategorien etter ett spørsmål
+
+      setTimeout(() => {
+        closeModal();
+        renderCategories();
+        if (allCategoriesDone()) {
+          setTimeout(() => {
+            alert(`Alle kategorier er brukt! Du endte på ${score} poeng.`);
+          }, 200);
+        }
+      }, 1200);
+    }
+
+    function allCategoriesDone() {
+      return data.every((_, idx) => usedCategory[idx]);
+    }
+
+    function closeModal() {
+      modalBackdrop.style.display = "none";
+      current = null;
+    }
+
+    closeBtn.addEventListener("click", closeModal);
+    modalBackdrop.addEventListener("click", (e) => {
+      if (e.target === modalBackdrop) closeModal();
+    });
+
+    resetBtn.addEventListener("click", () => {
+      if (!confirm("Nullstill poeng og quiz?")) return;
+      score = 0;
+      usedQuestions = {};
+      usedCategory = {};
+      scoreEl.textContent = score;
+      renderCategories();
+      closeModal();
+    });
+
+    helpBtn.addEventListener("click", () => {
+      alert(
+`Regler:
+- Hver kategori har flere verdier (100, 200, 300, osv.).
+- Du kan bare velge ÉN verdi per kategori.
+- Når du velger en verdi, får du et spørsmål med svaralternativer.
+- Klikk på alternativet du tror er riktig.
+- Riktig: du får poengverdien.
+- Feil: du mister samme antall poeng.
+- Når alle kategorier er brukt, er quizen ferdig.`
+      );
+    });
+
+    renderCategories();
+  </script>
+</body>
+</html>
